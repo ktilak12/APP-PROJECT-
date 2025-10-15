@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Find an Expert - InnovateHub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #121212, #2c2c2c);
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px 5%;
+  }
+  
+  /* Header Styles */
+  header {
+    background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+    padding: 20px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    margin: -20px -5% 30px -5%;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .logo i {
+    font-size: 28px;
+    color: #8a2be2;
+  }
+  
+  .logo h1 {
+    font-size: 24px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+  }
+  
+  nav a {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+    font-size: 16px;
+  }
+  
+  nav a:hover {
+    color: #8a2be2;
+  }
+  
+  .login-btn {
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+    color: white;
+  }
+  
+  /* Main Content */
+  .page-title {
+    margin-bottom: 20px;
+  }
+  
+  .page-title h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+  }
+  
+  .description {
+    font-size: 18px;
+    color: #a0a0a0;
+    margin-bottom: 40px;
+    max-width: 800px;
+    line-height: 1.6;
+  }
+  
+  .section-title {
+    font-size: 24px;
+    margin: 40px 0 20px 0;
+    color: #e0e0e0;
+    border-left: 4px solid #8a2be2;
+    padding-left: 15px;
+  }
+  
+  /* Recommended Experts */
+  .recommended-grid {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+  }
+  
+  .recommended-card {
+    background: #1a1a1a;
+    border-radius: 12px;
+    width: 200px;
+    padding: 25px 20px;
+    text-align: center;
+    border: 1px solid #333;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+  
+  .recommended-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    border-color: #8a2be2;
+  }
+  
+  .initial-circle {
+    width: 96px;
+    height: 96px;
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    border-radius: 50%;
+    color: white;
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 96px;
+    margin: 0 auto 15px auto;
+  }
+  
+  .recommended-name {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+    color: #e5e7eb;
+  }
+  
+  .recommended-title {
+    color: #8692a6;
+    font-size: 0.9rem;
+  }
+  
+  /* Featured Experts */
+  .featured-item {
+    display: flex;
+    justify-content: space-between;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    align-items: center;
+    border: 1px solid #333;
+    transition: transform 0.3s;
+  }
+  
+  .featured-item:hover {
+    transform: translateX(5px);
+    border-color: #8a2be2;
+  }
+  
+  .featured-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+  }
+  
+  .featured-initial {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    border-radius: 50%;
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  
+  .featured-text strong {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #e5e7eb;
+    display: block;
+  }
+  
+  .featured-text p {
+    margin: 6px 0 0 0;
+    color: #8a97b3;
+    font-size: 0.9rem;
+  }
+  
+  .view-profile-btn {
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .view-profile-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+  }
+  
+  /* Profile Cards */
+  .profiles-container {
+    max-width: 1000px;
+    margin: 50px auto;
+  }
+  
+  .profile-card {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #333;
+    transition: all 0.3s;
+  }
+  
+  .profile-card.highlight {
+    background: #2a2a2a;
+    border-color: #8a2be2;
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+  }
+  
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .profile-initial {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    border-radius: 50%;
+    font-size: 48px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  
+  .profile-name {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #e0e0e0;
+  }
+  
+  .profile-title {
+    font-weight: 600;
+    color: #9aa5c1;
+    margin-top: 5px;
+  }
+  
+  .profile-description {
+    margin-top: 20px;
+    line-height: 1.6;
+    color: #c4c9d9;
+    font-size: 1rem;
+  }
+  
+  .profile-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .skill-tag {
+    background: #2c2c2c;
+    color: #8a2be2;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    border: 1px solid #333;
+  }
+  
+  /* Footer */
+  footer {
+    background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+    text-align: center;
+    padding: 40px 20px 20px;
+    border-top: 1px solid #333;
+    margin-top: 60px;
+  }
+  
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .footer-links a {
+    color: #a0a0a0;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .footer-links a:hover {
+    color: #8a2be2;
+  }
+  
+  footer p {
+    color: #a0a0a0;
+    font-size: 14px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    header {
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    nav ul {
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .recommended-grid {
+      justify-content: center;
+    }
+    
+    .featured-item {
+      flex-direction: column;
+      text-align: center;
+      gap: 15px;
+    }
+    
+    .featured-info {
+      flex-direction: column;
+    }
+    
+    .profile-header {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <i class="fas fa-lightbulb"></i>
+      <h1>InnovateHub</h1>
+    </div>
+    
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="myidea.html">My Ideas</a></li>
+        <li><a href="submit.html">Submit Idea</a></li>
+      </ul>
+    </nav>
+    
+    <a href="login.html" class="login-btn">Login</a>
+  </header>
+
+  <div class="page-title">
+    <h1>Find an Expert</h1>
+    <p class="description">Connect with industry leaders to refine your ideas and accelerate your project's success.</p>
+  </div>
+
+  <h2 class="section-title">Recommended Experts</h2>
+  <div class="recommended-grid" id="recommendedExperts"></div>
+
+  <h2 class="section-title">Featured Experts</h2>
+  <div id="featuredExperts"></div>
+
+  <hr style="border-color: #32435b; margin: 40px 0;" />
+
+  <h2 class="section-title">Expert Profiles</h2>
+  <div class="profiles-container" id="profilesContainer"></div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <p>© 2025 InnovateHub. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Expert data
+    const experts = [
+      {
+        id: "sarayu",
+        name: "Sarayu Patel",
+        title: "Data Scientist & AI Specialist",
+        description: "Expert in machine learning and AI-driven solutions with over 8 years of experience. Specialized in developing predictive models and implementing AI solutions for businesses. Successfully led projects for Fortune 500 companies and startups alike.",
+        skills: ["Machine Learning", "Python", "TensorFlow", "Data Analysis", "AI Integration"]
+      },
+      {
+        id: "tilak",
+        name: "Tilak Reddy",
+        title: "Cybersecurity Specialist",
+        description: "Focused on network security and risk management with a proven track record of securing enterprise systems. Certified ethical hacker with expertise in vulnerability assessment and penetration testing. Passionate about educating organizations on security best practices.",
+        skills: ["Network Security", "Ethical Hacking", "Risk Management", "Encryption", "Cloud Security"]
+      },
+      {
+        id: "keerthana",
+        name: "Keerthana Sharma",
+        title: "Product Manager",
+        description: "Experienced in agile product development for SaaS with a focus on user-centered design. Has successfully launched over 15 products that achieved market fit. Strong background in cross-functional team leadership and product strategy.",
+        skills: ["Product Strategy", "Agile Methodology", "User Research", "SaaS", "Project Management"]
+      },
+      {
+        id: "arjun",
+        name: "Arjun Kumar",
+        title: "Blockchain Developer",
+        description: "Specialist in decentralized applications and smart contracts with extensive experience in Ethereum and other blockchain platforms. Contributed to open-source blockchain projects and has deep understanding of cryptocurrency ecosystems.",
+        skills: ["Solidity", "Ethereum", "Smart Contracts", "DeFi", "Web3"]
+      },
+      {
+        id: "priya",
+        name: "Priya Desai",
+        title: "UX/UI Designer",
+        description: "Award-winning designer with expertise in creating intuitive user experiences and beautiful interfaces. Focused on solving complex design problems and creating products that users love. Strong background in user research and usability testing.",
+        skills: ["User Research", "Figma", "Prototyping", "UI Design", "Usability Testing"]
+      }
+    ];
+
+    // DOM elements
+    const recommendedExpertsDiv = document.getElementById('recommendedExperts');
+    const featuredExpertsDiv = document.getElementById('featuredExperts');
+    const profilesContainer = document.getElementById('profilesContainer');
+
+    // Render recommended experts
+    function renderRecommendedExperts() {
+      recommendedExpertsDiv.innerHTML = '';
+      experts.forEach(expert => {
+        const card = document.createElement('div');
+        card.className = 'recommended-card';
+        card.addEventListener('click', () => {
+          scrollToExpert(expert.id);
+        });
+
+        const initialCircle = document.createElement('div');
+        initialCircle.className = 'initial-circle';
+        initialCircle.textContent = expert.name.charAt(0);
+        card.appendChild(initialCircle);
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'recommended-name';
+        nameDiv.textContent = expert.name;
+        card.appendChild(nameDiv);
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'recommended-title';
+        titleDiv.textContent = expert.title;
+        card.appendChild(titleDiv);
+
+        recommendedExpertsDiv.appendChild(card);
+      });
+    }
+
+    // Render featured experts
+    function renderFeaturedExperts() {
+      featuredExpertsDiv.innerHTML = '';
+      experts.forEach(expert => {
+        const item = document.createElement('div');
+        item.className = 'featured-item';
+
+        const info = document.createElement('div');
+        info.className = 'featured-info';
+
+        const initialCircle = document.createElement('div');
+        initialCircle.className = 'featured-initial';
+        initialCircle.textContent = expert.name.charAt(0);
+        info.appendChild(initialCircle);
+
+        const textBlock = document.createElement('div');
+        textBlock.className = 'featured-text';
+
+        const name = document.createElement('strong');
+        name.textContent = expert.name;
+        textBlock.appendChild(name);
+
+        const desc = document.createElement('p');
+        desc.textContent = expert.title;
+        textBlock.appendChild(desc);
+
+        info.appendChild(textBlock);
+        item.appendChild(info);
+
+        const btn = document.createElement('button');
+        btn.className = 'view-profile-btn';
+        btn.textContent = 'View Profile';
+        btn.addEventListener('click', () => {
+          scrollToExpert(expert.id);
+        });
+
+        item.appendChild(btn);
+        featuredExpertsDiv.appendChild(item);
+      });
+    }
+
+    // Render full profiles
+    function renderProfiles() {
+      profilesContainer.innerHTML = '';
+      experts.forEach(expert => {
+        const card = document.createElement('div');
+        card.className = 'profile-card';
+        card.id = `profile-${expert.id}`;
+
+        const header = document.createElement('div');
+        header.className = 'profile-header';
+
+        const initialCircle = document.createElement('div');
+        initialCircle.className = 'profile-initial';
+        initialCircle.textContent = expert.name.charAt(0);
+        header.appendChild(initialCircle);
+
+        const nameTitle = document.createElement('div');
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'profile-name';
+        nameEl.textContent = expert.name;
+        nameTitle.appendChild(nameEl);
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'profile-title';
+        titleEl.textContent = expert.title;
+        nameTitle.appendChild(titleEl);
+
+        header.appendChild(nameTitle);
+        card.appendChild(header);
+
+        const description = document.createElement('p');
+        description.className = 'profile-description';
+        description.textContent = expert.description;
+        card.appendChild(description);
+
+        // Add skills
+        const skillsDiv = document.createElement('div');
+        skillsDiv.className = 'profile-skills';
+        
+        expert.skills.forEach(skill => {
+          const skillTag = document.createElement('span');
+          skillTag.className = 'skill-tag';
+          skillTag.textContent = skill;
+          skillsDiv.appendChild(skillTag);
+        });
+        
+        card.appendChild(skillsDiv);
+
+        profilesContainer.appendChild(card);
+      });
+    }
+
+    // Scroll to expert function
+    function scrollToExpert(expertId) {
+      const profileElement = document.getElementById(`profile-${expertId}`);
+      if (profileElement) {
+        profileElement.classList.add('highlight');
+        profileElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+          profileElement.classList.remove('highlight');
+        }, 3000);
+      }
+    }
+
+    // Initialize the page
+    function init() {
+      renderRecommendedExperts();
+      renderFeaturedExperts();
+      renderProfiles();
+    }
+
+    // Run initialization when DOM is loaded
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

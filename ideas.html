@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnovateHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: #f0f0f0;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #121212;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            grid-column: 1 / -1;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #8a2be2;
+        }
+        
+        .search-bar {
+            display: flex;
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+        
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            outline: none;
+        }
+        
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #8a2be2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .sidebar {
+            background: #121212;
+            border-radius: 15px;
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #8a2be2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .username {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .title {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .post {
+            background: #121212;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4a4a4a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .post-user {
+            font-weight: bold;
+        }
+        
+        .post-time {
+            font-size: 12px;
+            color: #aaa;
+            margin-left: 10px;
+        }
+        
+        .post-content {
+            margin-bottom: 15px;
+        }
+        
+        .post-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #8a2be2;
+        }
+        
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #222;
+            padding-top: 15px;
+        }
+        
+        .action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: #aaa;
+        }
+        
+        .action:hover {
+            color: #8a2be2;
+        }
+        
+        .action.active {
+            color: #8a2be2;
+        }
+        
+        .comment-section {
+            margin-top: 20px;
+        }
+        
+        .comment {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4a4a4a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .comment-content {
+            background: #1a1a1a;
+            border-radius: 18px;
+            padding: 12px 15px;
+            flex-grow: 1;
+        }
+        
+        .comment-user {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .comment-text {
+            font-size: 14px;
+            color: #ddd;
+        }
+        
+        .comment-input {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        .comment-input input {
+            flex-grow: 1;
+            background: #1a1a1a;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 15px;
+            color: #fff;
+            outline: none;
+        }
+        
+        .comment-input button {
+            background: #8a2be2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0 20px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .likes-dashboard {
+            background: #121212;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .likes-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #8a2be2;
+        }
+        
+        .like-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .like-item:last-child {
+            border-bottom: none;
+        }
+        
+        .like-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4a4a4a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .like-content {
+            font-size: 14px;
+        }
+        
+        .like-post {
+            color: #8a2be2;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">InnovateHub</div>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search...">
+        </div>
+        <div class="user-nav">
+            <div class="avatar">SC</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-avatar">S</div>
+                <div class="username">Sarayu</div>
+                <div class="title">Sustainability Developer</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="total-followers">247</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="total-likes">361</div>
+                        <div class="stat-label">Likes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="total-posts">48</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="post">
+                <div class="post-header">
+                    <div class="post-avatar">S</div>
+                    <div>
+                        <div class="post-user">Sarayu</div>
+                        <div class="post-time">2 days ago · Sustainability</div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <div class="post-title">Eco-Friendly Packaging Solution</div>
+                    <p>This project aims to develop a sustainable packaging alternative to traditional plastics. We're exploring biodegradable materials like mushroom packaging and seaweed films. Our goal is to create packaging that is both environmentally friendly and cost-effective for businesses.</p>
+                </div>
+                <div class="post-actions">
+                    <div class="action" id="like-button">
+                        <i class="far fa-heart"></i>
+                        <span id="like-count">124</span> Likes
+                    </div>
+                    <div class="action">
+                        <i class="far fa-comment"></i>
+                        <span>23 Comments</span>
+                    </div>
+                    <div class="action">
+                        <i class="far fa-bookmark"></i>
+                        <span>Save</span>
+                    </div>
+                </div>
+                
+                <div class="comment-section">
+                    <div class="comment">
+                        <div class="comment-avatar">T</div>
+                        <div class="comment-content">
+                            <div class="comment-user">Tilak· 1 day ago</div>
+                            <div class="comment-text">This is a fantastic idea! Have you considered the scalability of mushroom packaging? It might be challenging to produce in large quantities.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment">
+                        <div class="comment-avatar">S</div>
+                        <div class="comment-content">
+                            <div class="comment-user">Sarayu · 12 hours ago</div>
+                            <div class="comment-text">Thanks for the feedback, Ethan! We're researching different production methods to address scalability. We're also looking into partnerships with local farms to source materials.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment">
+                        <div class="comment-avatar">Ok</div>
+                        <div class="comment-content">
+                            <div class="comment-user">Keerthana· 2 days ago</div>
+                            <div class="comment-text">I love the concept! Have you explored using seaweed films? They're incredibly sustainable and could be a great alternative to plastic wraps.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment">
+                        <div class="comment-avatar">S</div>
+                        <div class="comment-content">
+                            <div class="comment-user">Sarayu· 1 day ago</div>
+                            <div class="comment-text">Yes, Olivia! Seaweed films are definitely on our radar. We're currently evaluating their durability and cost-effectiveness compared to other options. Your input is greatly appreciated!</div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment-input">
+                        <input type="text" placeholder="Add a comment...">
+                        <button>Post</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="likes-dashboard">
+                <div class="likes-title">Recent Likes On Your Posts</div>
+                
+                <div class="like-item">
+                    <div class="like-avatar">S</div>
+                    <div class="like-content">
+                        <span class="username">Sarayu</span> liked your post about <span class="like-post">Eco-Friendly Packaging</span>
+                    </div>
+                </div>
+                
+                <div class="like-item">
+                    <div class="like-avatar">T</div>
+                    <div class="like-content">
+                        <span class="username">Tilak</span> liked your post about <span class="like-post">Eco-Friendly Packaging</span>
+                    </div>
+                </div>
+                
+                <div class="like-item">
+                    <div class="like-avatar">K</div>
+                    <div class="like-content">
+                        <span class="username">Keerthana</span> liked your post about <span class="like-post">Eco-Friendly Packaging</span>
+                    </div>
+                </div>
+                
+                <div class="like-item">
+                    <div class="like-avatar">H</div>
+                    <div class="like-content">
+                        <span class="username"></span>Harishma</span> liked your post about <span class="like-post">Eco-Friendly Packaging</span>
+                    </div>
+                </div>
+                
+                <div class="like-item">
+                    <div class="like-avatar">N</div>
+                    <div class="like-content">
+                        <span class="username">Nikhila</span> liked your post about <span class="like-post">Eco-Friendly Packaging</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Like functionality
+            const likeButton = document.getElementById('like-button');
+            const likeCount = document.getElementById('like-count');
+            const totalLikes = document.getElementById('total-likes');
+            let isLiked = false;
+            let currentLikes = 124;
+            let profileLikes = 361;
+            
+            likeButton.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (!isLiked) {
+                    // Like the post
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    this.classList.add('active');
+                    currentLikes++;
+                    profileLikes++;
+                    isLiked = true;
+                    
+                    // Add to likes dashboard
+                    const likesDashboard = document.querySelector('.likes-dashboard');
+                    const newLike = document.createElement('div');
+                    newLike.className = 'like-item';
+                    newLike.innerHTML = `
+                        <div class="like-avatar">YT</div>
+                        <div class="like-content">
+                            <span class="username">You</span> liked your post about <span class="like-post">Eco-Friendly Packaging</span>
+                        </div>
+                    `;
+                    likesDashboard.appendChild(newLike);
+                } else {
+                    // Unlike the post
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    this.classList.remove('active');
+                    currentLikes--;
+                    profileLikes--;
+                    isLiked = false;
+                    
+                    // Remove your like from dashboard (simplified)
+                    const yourLikes = document.querySelectorAll('.like-item');
+                    for (let like of yourLikes) {
+                        if (like.textContent.includes('You liked')) {
+                            like.remove();
+                            break;
+                        }
+                    }
+                }
+                
+                likeCount.textContent = currentLikes;
+                totalLikes.textContent = profileLikes;
+            });
+            
+            // Comment functionality
+            const commentInput = document.querySelector('.comment-input input');
+            const commentButton = document.querySelector('.comment-input button');
+            
+            commentButton.addEventListener('click', function() {
+                if (commentInput.value.trim() !== '') {
+                    const commentSection = document.querySelector('.comment-section');
+                    
+                    const newComment = document.createElement('div');
+                    newComment.className = 'comment';
+                    
+                    newComment.innerHTML = `
+                        <div class="comment-avatar">SC</div>
+                        <div class="comment-content">
+                            <div class="comment-user">Sophie Carter · Just now</div>
+                            <div class="comment-text">${commentInput.value}</div>
+                        </div>
+                    `;
+                    
+                    commentSection.insertBefore(newComment, document.querySelector('.comment-input'));
+                    commentInput.value = '';
+                }
+            });
+            
+            // Allow pressing Enter to submit comment
+            commentInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    commentButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

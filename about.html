@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About InnovateHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #121212, #2c2c2c);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: #8a2be2;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #8a2be2, #6a0dad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 16px;
+        }
+        
+        nav a:hover {
+            color: #8a2be2;
+        }
+        
+        .login-btn {
+            background: linear-gradient(135deg, #8a2be2, #6a0dad);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+            color: white;
+        }
+        
+        /* Hero Section */
+        .about-hero {
+            padding: 80px 5%;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .about-hero h2 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #8a2be2, #6a0dad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        
+        .about-hero p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            color: #a0a0a0;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Mission Section */
+        .mission {
+            padding: 60px 5%;
+            background: #1a1a1a;
+            border-radius: 12px;
+            margin: 0 auto 80px;
+            max-width: 1000px;
+        }
+        
+        .mission h3 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #e0e0e0;
+        }
+        
+        .mission-content {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+        
+        .mission-text {
+            flex: 1;
+        }
+        
+        .mission-image {
+            flex: 1;
+            background: linear-gradient(135deg, #8a2be2, #6a0dad);
+            border-radius: 12px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mission-image i {
+            font-size: 100px;
+            color: white;
+        }
+        
+        /* Benefits Section */
+        .benefits {
+            padding: 60px 5%;
+            max-width: 1000px;
+            margin: 0 auto 80px;
+        }
+        
+        .benefits h3 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #e0e0e0;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .benefit-card {
+            background: #2c2c2c;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #333;
+            transition: transform 0.3s;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .benefit-card i {
+            font-size: 40px;
+            color: #8a2be2;
+            margin-bottom: 20px;
+        }
+        
+        .benefit-card h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .benefit-card p {
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+        
+        /* For Teachers Section */
+        .for-teachers {
+            padding: 60px 5%;
+            background: #1a1a1a;
+            border-radius: 12px;
+            margin: 0 auto 80px;
+            max-width: 1000px;
+        }
+        
+        .for-teachers h3 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #e0e0e0;
+        }
+        
+        .teacher-benefits {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .teacher-benefit {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            background: #2c2c2c;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        
+        .teacher-benefit i {
+            font-size: 30px;
+            color: #8a2be2;
+            margin-top: 5px;
+        }
+        
+        .teacher-benefit h4 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+        }
+        
+        .teacher-benefit p {
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 60px 5%;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 80px;
+            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+            border-radius: 12px;
+        }
+        
+        .cta-section h3 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+        
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+        
+        .cta-btn {
+            background: linear-gradient(135deg, #8a2be2, #6a0dad);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: inline-block;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+            text-align: center;
+            padding: 40px 20px 20px;
+            border-top: 1px solid #333;
+            margin-top: auto;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-links a {
+            color: #a0a0a0;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: #8a2be2;
+        }
+        
+        footer p {
+            color: #a0a0a0;
+            font-size: 14px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav ul {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .about-hero h2 {
+                font-size: 32px;
+            }
+            
+            .mission-content {
+                flex-direction: column;
+            }
+            
+            .mission-image {
+                width: 100%;
+            }
+            
+            .teacher-benefit {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-lightbulb"></i>
+            <h1>InnovateHub</h1>
+        </div>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="#">Start Pitching</a></li>
+                <li><a href="#">Investors</a></li>
+            </ul>
+        </nav>
+        
+        <a href="login.html" class="login-btn">Login</a>
+    </header>
+    
+    <section class="about-hero">
+        <h2>Empowering the Next Generation of Innovators</h2>
+        <p>InnovateHub is a cutting-edge platform designed to connect educators, students, and experts to transform innovative ideas into reality. We believe in the power of collaboration to drive meaningful change.</p>
+    </section>
+    
+    <section class="mission">
+        <h3>Our Mission</h3>
+        <div class="mission-content">
+            <div class="mission-text">
+                <p>At InnovateHub, we're dedicated to creating a global ecosystem where educational institutions and industry experts can collaborate seamlessly. Our platform bridges the gap between academic learning and real-world application.</p>
+                <p>We provide the tools, resources, and connections needed to nurture innovative thinking and turn classroom concepts into viable solutions for tomorrow's challenges.</p>
+                <p>By facilitating these connections, we're not just building a platform—we're building a movement that celebrates creativity, critical thinking, and collaborative problem-solving.</p>
+            </div>
+            <div class="mission-image">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+        </div>
+    </section>
+    
+    <section class="benefits">
+        <h3>Why Choose InnovateHub?</h3>
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <i class="fas fa-handshake"></i>
+                <h4>Meaningful Connections</h4>
+                <p>Connect students with industry professionals who can provide guidance, mentorship, and real-world perspectives.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <i class="fas fa-lightbulb"></i>
+                <h4>Idea Incubation</h4>
+                <p>Provide a structured environment for students to develop, refine, and present their innovative ideas.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <h4>Educational Integration</h4>
+                <p>Seamlessly integrate with classroom learning to enhance project-based education and practical application.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="for-teachers">
+        <h3>Specifically Designed for Educators</h3>
+        <div class="teacher-benefits">
+            <div class="teacher-benefit">
+                <i class="fas fa-users"></i>
+                <div>
+                    <h4>Enhanced Student Engagement</h4>
+                    <p>Watch your students become more invested in their learning when they can see real-world applications for their ideas and receive feedback from industry professionals.</p>
+                </div>
+            </div>
+            
+            <div class="teacher-benefit">
+                <i class="fas fa-project-diagram"></i>
+                <div>
+                    <h4>Project-Based Learning Made Easy</h4>
+                    <p>Our platform provides the perfect framework for implementing project-based learning, with tools for collaboration, feedback, and presentation all in one place.</p>
+                </div>
+            </div>
+            
+            <div class="teacher-benefit">
+                <i class="fas fa-network-wired"></i>
+                <div>
+                    <h4>Expand Your Professional Network</h4>
+                    <p>Connect with other educators and industry experts to share best practices, find collaboration opportunities, and stay updated on the latest trends in education and innovation.</p>
+                </div>
+            </div>
+            
+            <div class="teacher-benefit">
+                <i class="fas fa-chart-line"></i>
+                <div>
+                    <h4>Track Student Progress</h4>
+                    <p>Monitor your students' development throughout their innovation journey, with insights into their collaboration skills, critical thinking, and problem-solving abilities.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-section">
+        <h3>Ready to Transform Education?</h3>
+        <p>Join hundreds of educators who are already using InnovateHub to bring innovation and real-world connections into their classrooms.</p>
+        <a href="register.html" class="cta-btn">Get Started Today</a>
+    </section>
+    
+    <footer>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="#">Contact</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+        </div>
+        <p>© 2025 InnovateHub. All rights reserved.</p>
+    </footer>
+</body>
+</html>
