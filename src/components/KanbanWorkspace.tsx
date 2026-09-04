@@ -235,7 +235,7 @@ export const KanbanWorkspace: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem', display: 'block' }}>Assignee</label>
-                  <input type="text" className="input-field" value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="e.g. Abhi Kumar" />
+                  <input type="text" className="input-field" value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="e.g. Arjun Reddy" />
                 </div>
                 <div>
                   <label style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem', display: 'block' }}>Priority Level</label>

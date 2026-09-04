@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { BarChart3, Eye, Flame, Users, Sparkles, TrendingUp, Award, Layers } from 'lucide-react';
+import { BarChart3, Eye, Flame, Users, Sparkles, TrendingUp, Layers } from 'lucide-react';
 
 export const AnalyticsDashboard: React.FC = () => {
   const { ideas } = useApp();

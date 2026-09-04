@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { mockUsers } from '../data/mockData';
+import { defaultIdeaAuthors } from '../data/mockData';
 import { User, Idea } from '../types';
 import { Sparkles, Award, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export const CollaboratorMatchmaker: React.FC = () => {
-  const { ideas, currentUser, applyToTeam } = useApp();
+  const { ideas, applyToTeam, accounts } = useApp();
   const [selectedIdeaId, setSelectedIdeaId] = useState<string>(ideas[0]?.id || '');
   const [skillQuery, setSkillQuery] = useState<string>('');
 
@@ -31,7 +31,19 @@ export const CollaboratorMatchmaker: React.FC = () => {
     return Math.min(98, Math.round(skillScore + interestScore + repScore));
   };
 
-  const candidates = mockUsers.map(u => ({
+  // Combine platform authors and registered Google accounts
+  const allInnovators: User[] = React.useMemo(() => {
+    const list = [...Object.values(defaultIdeaAuthors), ...accounts];
+    const unique = new Map<string, User>();
+    list.forEach(u => {
+      if (!unique.has(u.id)) {
+        unique.set(u.id, u);
+      }
+    });
+    return Array.from(unique.values());
+  }, [accounts]);
+
+  const candidates = allInnovators.map(u => ({
     user: u,
     matchScore: currentIdea ? calculateUserMatch(u, currentIdea) : 80,
     matchedSkills: u.skills.filter(s => 
@@ -108,7 +120,7 @@ export const CollaboratorMatchmaker: React.FC = () => {
                   <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
                     <img 
                       src={user.avatar} 
-                      alt={user.name}
+                      alt={user.name} 
                       style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} 
                     />
                     <div>

@@ -37,6 +37,7 @@ export interface User {
   linkedin?: string;
   ideasCount: number;
   authProvider?: 'google' | 'email';
+  isAdmin?: boolean;
 }
 
 export interface StructuredFeedback {

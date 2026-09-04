@@ -1,29 +1,8 @@
 import { Idea, User, Challenge } from '../types';
 
-export const currentUser: User = {
-  id: 'usr_abhi',
-  name: 'Abhi Kumar',
-  username: 'abhikumar',
-  email: 'abhi.kumar@gmail.com',
-  googleId: 'google_1082948291048201',
-  authProvider: 'google',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-  role: 'Full Stack Engineer & AI Enthusiast',
-  skills: ['React', 'TypeScript', 'Node.js', 'Python', 'FastAPI', 'Machine Learning', 'PostgreSQL', 'UI/UX'],
-  interests: ['AI & ML', 'Environment', 'EdTech', 'SaaS', 'Climate Tech'],
-  reputation: 2450,
-  bio: 'Building early-stage software & AI solutions. Passionate about sustainability, open source, and developer platforms.',
-  location: 'Bengaluru, India',
-  college: 'IIT Madras',
-  github: 'github.com/abhikumar',
-  linkedin: 'linkedin.com/in/abhikumar',
-  ideasCount: 3,
-};
-
-export const mockUsers: User[] = [
-  currentUser,
-  {
-    id: 'usr_rahul',
+export const defaultIdeaAuthors: Record<string, User> = {
+  rahul: {
+    id: 'usr_rahul_author',
     name: 'Rahul Sharma',
     username: 'rahul_ml',
     email: 'rahul.sharma.ml@gmail.com',
@@ -39,8 +18,8 @@ export const mockUsers: User[] = [
     github: 'github.com/rahulml',
     ideasCount: 5,
   },
-  {
-    id: 'usr_priya',
+  priya: {
+    id: 'usr_priya_author',
     name: 'Priya Patel',
     username: 'priyadesign',
     email: 'priya.patel.design@gmail.com',
@@ -56,8 +35,8 @@ export const mockUsers: User[] = [
     github: 'github.com/priyadesign',
     ideasCount: 2,
   },
-  {
-    id: 'usr_arjun',
+  arjun: {
+    id: 'usr_arjun_author',
     name: 'Arjun Reddy',
     username: 'arjun_hardware',
     email: 'arjun.reddy.iot@gmail.com',
@@ -71,8 +50,11 @@ export const mockUsers: User[] = [
     bio: 'Hardware tinkerer bridging physical sensors with cloud APIs.',
     location: 'Hyderabad, India',
     ideasCount: 4,
-  },
-];
+  }
+};
+
+export const currentUser: User | null = null;
+export const mockUsers: User[] = [];
 
 export const mockChallenges: Challenge[] = [
   {
@@ -125,16 +107,16 @@ export const mockIdeas: Idea[] = [
     stage: 'Prototype',
     stageProgress: 60,
     upvotes: 142,
-    userUpvoted: true,
+    userUpvoted: false,
     interestsCount: 48,
-    userInterested: true,
+    userInterested: false,
     potentialsCount: 39,
-    author: currentUser,
+    author: defaultIdeaAuthors.arjun,
     createdAt: '2026-08-20T10:30:00.000Z',
     views: 1240,
     requiredSkills: ['Embedded C++', 'TinyML', 'React Dashboard', 'PostgreSQL'],
     techStack: ['ESP32', 'FreeRTOS', 'TensorFlow Lite', 'FastAPI', 'React', 'TimescaleDB'],
-    githubUrl: 'github.com/abhikumar/aquasense-core',
+    githubUrl: 'github.com/arjunreddy/aquasense-core',
     demoUrl: 'https://aquasense-demo.vercel.app',
     aiEvaluation: {
       overallScore: 88,
@@ -161,7 +143,7 @@ export const mockIdeas: Idea[] = [
     feedbackList: [
       {
         id: 'fb_1',
-        userId: 'usr_rahul',
+        userId: 'usr_rahul_author',
         userName: 'Rahul Sharma',
         userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
         problemClarity: 5,
@@ -177,7 +159,7 @@ export const mockIdeas: Idea[] = [
     comments: [
       {
         id: 'c_1',
-        userId: 'usr_priya',
+        userId: 'usr_priya_author',
         userName: 'Priya Patel',
         userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80',
         content: 'Is there a companion mobile dashboard for field maintenance technicians to inspect alerts in real-time?',
@@ -187,20 +169,12 @@ export const mockIdeas: Idea[] = [
     ],
     team: [
       {
-        userId: 'usr_abhi',
-        name: 'Abhi Kumar',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-        role: 'Project Lead & Firmware',
-        status: 'Founder',
-        joinedAt: '2026-08-20'
-      },
-      {
-        userId: 'usr_arjun',
+        userId: 'usr_arjun_author',
         name: 'Arjun Reddy',
         avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=250&q=80',
-        role: 'Hardware / PCB Engineer',
-        status: 'Member',
-        joinedAt: '2026-08-25'
+        role: 'Founder & Hardware Systems Lead',
+        status: 'Founder',
+        joinedAt: '2026-08-20'
       }
     ],
     tasks: [
@@ -218,7 +192,7 @@ export const mockIdeas: Idea[] = [
         title: 'Build Edge Impulse TinyML Classifier',
         description: 'Train 3-class model: Normal Flow, Minor Micro-fissure, Critical Rupture.',
         status: 'in_progress',
-        assignee: 'Abhi Kumar',
+        assignee: 'Arjun Reddy',
         priority: 'high',
         createdAt: '2026-08-26'
       },
@@ -246,7 +220,7 @@ export const mockIdeas: Idea[] = [
     userUpvoted: false,
     interestsCount: 32,
     potentialsCount: 26,
-    author: mockUsers[1],
+    author: defaultIdeaAuthors.rahul,
     createdAt: '2026-08-24T12:00:00.000Z',
     views: 980,
     requiredSkills: ['Computer Vision', 'PyTorch', 'FastAPI', 'Mobile Dev', 'Agronomy'],
@@ -276,7 +250,7 @@ export const mockIdeas: Idea[] = [
     comments: [],
     team: [
       {
-        userId: 'usr_rahul',
+        userId: 'usr_rahul_author',
         name: 'Rahul Sharma',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
         role: 'Founder & Vision AI Lead',
@@ -297,10 +271,10 @@ export const mockIdeas: Idea[] = [
     stage: 'MVP',
     stageProgress: 75,
     upvotes: 205,
-    userUpvoted: true,
+    userUpvoted: false,
     interestsCount: 67,
     potentialsCount: 52,
-    author: mockUsers[2],
+    author: defaultIdeaAuthors.priya,
     createdAt: '2026-08-15T08:00:00.000Z',
     views: 1890,
     requiredSkills: ['Next.js', 'LLM Fine-Tuning', 'Speech-to-Text', 'Child Psychology'],
@@ -332,7 +306,7 @@ export const mockIdeas: Idea[] = [
     comments: [],
     team: [
       {
-        userId: 'usr_priya',
+        userId: 'usr_priya_author',
         name: 'Priya Patel',
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80',
         role: 'Product Lead',
