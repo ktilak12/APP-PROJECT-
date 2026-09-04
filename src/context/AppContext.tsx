@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import { Idea, User, Challenge, Category, IdeaStage, StructuredFeedback, Comment, KanbanTask, TeamMember } from '../types';
-import { mockIdeas, mockUsers, mockChallenges, currentUser as defaultUser } from '../data/mockData';
+import { mockIdeas, mockChallenges } from '../data/mockData';
 import confetti from 'canvas-confetti';
 
 export type ViewMode = 'explore' | 'pitch' | 'matchmaker' | 'challenges' | 'workspace' | 'analytics' | 'profile' | 'entry';
@@ -15,14 +16,33 @@ export interface NotificationItem {
   linkId?: string;
 }
 
-interface GoogleLoginParams {
+export interface GoogleJwtPayload {
+  sub: string;
   email: string;
   name: string;
+  picture?: string;
+  given_name?: string;
+  family_name?: string;
+  email_verified?: boolean;
+}
+
+export interface GoogleLoginParams {
+  email: string;
+  name: string;
+  googleId?: string;
   avatar?: string;
   role?: string;
   college?: string;
   skills?: string[];
   bio?: string;
+}
+
+interface UserVoteMap {
+  [userId: string]: {
+    upvotedIdeaIds: string[];
+    interestedIdeaIds: string[];
+    potentialIdeaIds: string[];
+  };
 }
 
 interface AppContextType {
@@ -43,7 +63,7 @@ interface AppContextType {
   setSelectedStage: (stage: IdeaStage | 'All') => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-  
+
   // Notifications
   notifications: NotificationItem[];
   markNotificationsRead: () => void;
@@ -53,6 +73,7 @@ interface AppContextType {
   setAuthModalOpen: (open: boolean) => void;
   authModalMode: 'choose' | 'add_google';
   setAuthModalMode: (mode: 'choose' | 'add_google') => void;
+  loginWithGoogleCredential: (credential: string) => void;
   loginWithGoogle: (params: GoogleLoginParams) => void;
   switchAccount: (userId: string) => void;
   logout: () => void;
@@ -64,8 +85,10 @@ interface AppContextType {
   handleToggleInterest: (ideaId: string) => void;
   handleTogglePotential: (ideaId: string) => void;
   addNewIdea: (newIdea: Omit<Idea, 'id' | 'createdAt' | 'views' | 'upvotes' | 'interestsCount' | 'potentialsCount' | 'author' | 'feedbackList' | 'comments' | 'team' | 'tasks'>) => void;
+  deleteIdea: (ideaId: string) => void;
   addFeedbackToIdea: (ideaId: string, feedback: Omit<StructuredFeedback, 'id' | 'userId' | 'userName' | 'userAvatar' | 'createdAt'>) => void;
   addCommentToIdea: (ideaId: string, content: string) => void;
+  deleteCommentFromIdea: (ideaId: string, commentId: string) => void;
   applyToTeam: (ideaId: string, role: string) => void;
   approveTeamMember: (ideaId: string, userId: string) => void;
   updateTaskStatus: (ideaId: string, taskId: string, newStatus: KanbanTask['status']) => void;
@@ -77,33 +100,76 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [ideas, setIdeas] = useState<Idea[]>(() => {
+  const [rawIdeas, setRawIdeas] = useState<Idea[]>(() => {
     const saved = localStorage.getItem('ideapitch_ideas');
-    return saved ? JSON.parse(saved) : mockIdeas;
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return mockIdeas;
+      }
+    }
+    return mockIdeas;
   });
 
   const [accounts, setAccounts] = useState<User[]>(() => {
     const saved = localStorage.getItem('ideapitch_accounts');
-    return saved ? JSON.parse(saved) : mockUsers;
+    if (saved) {
+      try {
+        const parsed: User[] = JSON.parse(saved);
+        return parsed.filter(u => u.id !== 'usr_abhi_author' && u.name !== 'Abhi Kumar');
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const savedUserId = localStorage.getItem('ideapitch_current_user_id');
     const savedAccounts = localStorage.getItem('ideapitch_accounts');
-    const userList: User[] = savedAccounts ? JSON.parse(savedAccounts) : mockUsers;
-    if (savedUserId) {
-      const found = userList.find(u => u.id === savedUserId);
-      if (found) return found;
+    if (savedUserId && savedUserId !== 'usr_abhi_author' && savedAccounts) {
+      try {
+        const userList: User[] = JSON.parse(savedAccounts);
+        const found = userList.find(u => u.id === savedUserId && u.id !== 'usr_abhi_author' && u.name !== 'Abhi Kumar');
+        if (found) return found;
+      } catch {
+        return null;
+      }
     }
-    return defaultUser;
+    return null;
+  });
+
+  // User-specific vote mappings to ensure independent votes per Google ID
+  const [userVotes, setUserVotes] = useState<UserVoteMap>(() => {
+    const saved = localStorage.getItem('ideapitch_user_votes');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return {};
+      }
+    }
+    return {};
   });
 
   const [challenges] = useState<Challenge[]>(mockChallenges);
-  const [activeView, setActiveView] = useState<ViewMode>('explore');
-  const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
+  const [activeView, _setActiveView] = useState<ViewMode>('entry');
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'choose' | 'add_google'>('choose');
+
+  const setActiveView = (view: ViewMode) => {
+    if (!currentUser && view !== 'entry') {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      return;
+    }
+    _setActiveView(view);
+  };
+
+  const effectiveActiveView: ViewMode = currentUser ? activeView : 'entry';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
@@ -112,25 +178,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: 'notif_1',
-      title: 'ML Matchmaker Suggestion',
-      message: 'Rahul Sharma has a 94% skill match for AquaSense.',
-      time: '10m ago',
-      read: false,
-      type: 'team'
-    },
-    {
-      id: 'notif_2',
-      title: 'AI Score Elevated',
-      message: 'EduMind received an AI Innovation Score of 91/100.',
-      time: '1h ago',
+      title: 'Welcome to IdeaPitch Hub',
+      message: 'Sign in with your Google Account to pitch ideas, join discussions and match with collaborators.',
+      time: 'Just now',
       read: false,
       type: 'ai'
     },
     {
-      id: 'notif_3',
+      id: 'notif_2',
       title: 'Hackathon Registration Open',
-      message: 'Climate Tech Challenge prize pool upgraded to ₹2,50,000.',
-      time: '3h ago',
+      message: 'Generative AI for India prize pool upgraded to ₹5,00,000.',
+      time: '2h ago',
       read: false,
       type: 'challenge'
     }
@@ -141,12 +199,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    localStorage.setItem('ideapitch_ideas', JSON.stringify(ideas));
-  }, [ideas]);
+    localStorage.setItem('ideapitch_ideas', JSON.stringify(rawIdeas));
+  }, [rawIdeas]);
 
   useEffect(() => {
     localStorage.setItem('ideapitch_accounts', JSON.stringify(accounts));
   }, [accounts]);
+
+  useEffect(() => {
+    localStorage.setItem('ideapitch_user_votes', JSON.stringify(userVotes));
+  }, [userVotes]);
 
   useEffect(() => {
     if (currentUser) {
@@ -161,12 +223,100 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('ideapitch_theme', theme);
   }, [theme]);
 
+  // Dynamically compute ideas with currentUser interaction states
+  const ideas: Idea[] = useMemo(() => {
+    const currentUserId = currentUser?.id;
+    const votes = currentUserId ? userVotes[currentUserId] : undefined;
+    const upvotedIds = new Set(votes?.upvotedIdeaIds || []);
+    const interestedIds = new Set(votes?.interestedIdeaIds || []);
+    const potentialIds = new Set(votes?.potentialIdeaIds || []);
+
+    return rawIdeas.map(idea => ({
+      ...idea,
+      userUpvoted: upvotedIds.has(idea.id),
+      userInterested: interestedIds.has(idea.id),
+      userPotential: potentialIds.has(idea.id)
+    }));
+  }, [rawIdeas, currentUser?.id, userVotes]);
+
+  const selectedIdea: Idea | null = useMemo(() => {
+    if (!selectedIdeaId) return null;
+    return ideas.find(i => i.id === selectedIdeaId) || null;
+  }, [ideas, selectedIdeaId]);
+
+  const setSelectedIdea = (idea: Idea | null) => {
+    if (!currentUser && idea) {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      return;
+    }
+    setSelectedIdeaId(idea ? idea.id : null);
+  };
+
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const markNotificationsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  // Real Google Sign-in credential handler
+  const loginWithGoogleCredential = (credential: string) => {
+    try {
+      const decoded = jwtDecode<GoogleJwtPayload>(credential);
+      if (!decoded || !decoded.email) {
+        throw new Error('Invalid Google credential payload');
+      }
+
+      const googleId = decoded.sub;
+      const existingAccount = accounts.find(
+        a => a.googleId === googleId || a.email.toLowerCase() === decoded.email.toLowerCase()
+      );
+
+      if (existingAccount) {
+        const updated = {
+          ...existingAccount,
+          googleId,
+          name: decoded.name || existingAccount.name,
+          avatar: decoded.picture || existingAccount.avatar,
+          authProvider: 'google' as const
+        };
+        setAccounts(prev => prev.map(a => a.id === updated.id ? updated : a));
+        setCurrentUser(updated);
+        setAuthModalOpen(false);
+        setActiveView('explore');
+        confetti({ particleCount: 90, spread: 60, origin: { y: 0.6 } });
+        return;
+      }
+
+      const newGoogleUser: User = {
+        id: `google_${googleId}`,
+        name: decoded.name || decoded.email.split('@')[0],
+        username: decoded.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, ''),
+        email: decoded.email,
+        googleId,
+        authProvider: 'google',
+        avatar: decoded.picture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80',
+        role: 'Tech Innovator & Builder',
+        skills: ['Full-Stack', 'AI/ML', 'Cloud'],
+        interests: ['AI & ML', 'SaaS', 'FinTech'],
+        reputation: 1000,
+        bio: `Verified Google Developer (${decoded.email}). Ready to pitch innovation and build startup prototypes.`,
+        location: 'Global',
+        college: 'Innovation Hub',
+        ideasCount: 0
+      };
+
+      setAccounts(prev => [newGoogleUser, ...prev]);
+      setCurrentUser(newGoogleUser);
+      setAuthModalOpen(false);
+      setActiveView('explore');
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    } catch (err) {
+      console.error('Failed to parse Google OAuth credential:', err);
+      alert('Unable to process Google Login credential. Please try again.');
+    }
   };
 
   // Google Multi-Account Handlers
@@ -176,6 +326,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (existing) {
       setCurrentUser(existing);
       setAuthModalOpen(false);
+      setActiveView('explore');
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
       return;
     }
@@ -187,17 +338,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=250&q=80'
     ];
     const chosenAvatar = params.avatar || defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+    const generatedGoogleId = params.googleId || `108${Math.floor(100000000000 + Math.random() * 900000000000)}`;
 
     const newUser: User = {
-      id: `usr_${Date.now()}`,
+      id: `usr_${generatedGoogleId}`,
       name: params.name || params.email.split('@')[0],
       username: params.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, ''),
       email: params.email,
-      googleId: `google_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+      googleId: generatedGoogleId,
       authProvider: 'google',
       avatar: chosenAvatar,
       role: params.role || 'Tech Innovator & Builder',
-      skills: params.skills || ['Full-Stack', 'AI / ML', 'Product Design'],
+      skills: params.skills && params.skills.length ? params.skills : ['Full-Stack', 'AI / ML', 'Product Design'],
       interests: ['AI & ML', 'SaaS', 'Environment'],
       reputation: 1000,
       bio: params.bio || `Passionate innovator signed in via Google (${params.email}). Ready to collaborate & pitch.`,
@@ -209,6 +361,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAccounts(prev => [newUser, ...prev]);
     setCurrentUser(newUser);
     setAuthModalOpen(false);
+    setActiveView('explore');
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
   };
 
@@ -217,6 +370,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (target) {
       setCurrentUser(target);
       setAuthModalOpen(false);
+      setActiveView('explore');
       confetti({ particleCount: 50, spread: 40, origin: { y: 0.5 } });
     }
   };
@@ -232,6 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (currentUser?.id === userId) {
         if (filtered.length > 0) {
           setCurrentUser(filtered[0]);
+          setActiveView('explore');
         } else {
           setCurrentUser(null);
           setActiveView('entry');
@@ -249,54 +404,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
   };
 
-  // Upvote / Interaction Handlers
+  // Upvote / Interaction Handlers with user ID isolation
   const handleUpvote = (ideaId: string) => {
     if (!currentUser) {
+      setAuthModalMode('choose');
       setAuthModalOpen(true);
       return;
     }
 
-    setIdeas(prev =>
+    const userId = currentUser.id;
+    const userVoteObj = userVotes[userId] || { upvotedIdeaIds: [], interestedIdeaIds: [], potentialIdeaIds: [] };
+    const isCurrentlyUpvoted = userVoteObj.upvotedIdeaIds.includes(ideaId);
+
+    const updatedUpvotes = isCurrentlyUpvoted
+      ? userVoteObj.upvotedIdeaIds.filter(id => id !== ideaId)
+      : [...userVoteObj.upvotedIdeaIds, ideaId];
+
+    setUserVotes(prev => ({
+      ...prev,
+      [userId]: {
+        ...userVoteObj,
+        upvotedIdeaIds: updatedUpvotes
+      }
+    }));
+
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
-          const isUpvoted = item.userUpvoted;
           return {
             ...item,
-            upvotes: isUpvoted ? item.upvotes - 1 : item.upvotes + 1,
-            userUpvoted: !isUpvoted,
+            upvotes: isCurrentlyUpvoted ? Math.max(0, item.upvotes - 1) : item.upvotes + 1
           };
         }
         return item;
       })
     );
-
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev
-          ? {
-              ...prev,
-              upvotes: prev.userUpvoted ? prev.upvotes - 1 : prev.upvotes + 1,
-              userUpvoted: !prev.userUpvoted,
-            }
-          : null
-      );
-    }
   };
 
   const handleToggleInterest = (ideaId: string) => {
     if (!currentUser) {
+      setAuthModalMode('choose');
       setAuthModalOpen(true);
       return;
     }
 
-    setIdeas(prev =>
+    const userId = currentUser.id;
+    const userVoteObj = userVotes[userId] || { upvotedIdeaIds: [], interestedIdeaIds: [], potentialIdeaIds: [] };
+    const isInterested = userVoteObj.interestedIdeaIds.includes(ideaId);
+
+    const updatedInterested = isInterested
+      ? userVoteObj.interestedIdeaIds.filter(id => id !== ideaId)
+      : [...userVoteObj.interestedIdeaIds, ideaId];
+
+    setUserVotes(prev => ({
+      ...prev,
+      [userId]: {
+        ...userVoteObj,
+        interestedIdeaIds: updatedInterested
+      }
+    }));
+
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
-          const isInterested = item.userInterested;
           return {
             ...item,
-            interestsCount: isInterested ? item.interestsCount - 1 : item.interestsCount + 1,
-            userInterested: !isInterested,
+            interestsCount: isInterested ? Math.max(0, item.interestsCount - 1) : item.interestsCount + 1
           };
         }
         return item;
@@ -306,18 +479,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleTogglePotential = (ideaId: string) => {
     if (!currentUser) {
+      setAuthModalMode('choose');
       setAuthModalOpen(true);
       return;
     }
 
-    setIdeas(prev =>
+    const userId = currentUser.id;
+    const userVoteObj = userVotes[userId] || { upvotedIdeaIds: [], interestedIdeaIds: [], potentialIdeaIds: [] };
+    const isPotential = userVoteObj.potentialIdeaIds.includes(ideaId);
+
+    const updatedPotential = isPotential
+      ? userVoteObj.potentialIdeaIds.filter(id => id !== ideaId)
+      : [...userVoteObj.potentialIdeaIds, ideaId];
+
+    setUserVotes(prev => ({
+      ...prev,
+      [userId]: {
+        ...userVoteObj,
+        potentialIdeaIds: updatedPotential
+      }
+    }));
+
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
-          const isPotential = item.userPotential;
           return {
             ...item,
-            potentialsCount: isPotential ? item.potentialsCount - 1 : item.potentialsCount + 1,
-            userPotential: !isPotential,
+            potentialsCount: isPotential ? Math.max(0, item.potentialsCount - 1) : item.potentialsCount + 1
           };
         }
         return item;
@@ -326,15 +514,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addNewIdea = (newPitch: Omit<Idea, 'id' | 'createdAt' | 'views' | 'upvotes' | 'interestsCount' | 'potentialsCount' | 'author' | 'feedbackList' | 'comments' | 'team' | 'tasks'>) => {
-    const activeUser = currentUser || defaultUser;
+    if (!currentUser) {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const activeUser = currentUser;
+    const newIdeaId = `idea_${Date.now()}`;
 
     const created: Idea = {
       ...newPitch,
-      id: `idea_${Date.now()}`,
+      id: newIdeaId,
       createdAt: new Date().toISOString(),
       views: 1,
       upvotes: 1,
-      userUpvoted: true,
       interestsCount: 0,
       potentialsCount: 0,
       author: activeUser,
@@ -363,18 +557,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]
     };
 
-    setIdeas(prev => [created, ...prev]);
+    setRawIdeas(prev => [created, ...prev]);
+
+    // Record author's initial upvote
+    setUserVotes(prev => {
+      const userVoteObj = prev[activeUser.id] || { upvotedIdeaIds: [], interestedIdeaIds: [], potentialIdeaIds: [] };
+      return {
+        ...prev,
+        [activeUser.id]: {
+          ...userVoteObj,
+          upvotedIdeaIds: [...userVoteObj.upvotedIdeaIds, newIdeaId]
+        }
+      };
+    });
 
     // Give reputation reward
-    updateUserProfile({ reputation: (activeUser.reputation || 1000) + 100 });
+    updateUserProfile({ 
+      reputation: (activeUser.reputation || 1000) + 100,
+      ideasCount: (activeUser.ideasCount || 0) + 1
+    });
 
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     setActiveView('explore');
-    setSelectedIdea(created);
+    setSelectedIdeaId(newIdeaId);
+  };
+
+  const deleteIdea = (ideaId: string) => {
+    const targetIdea = rawIdeas.find(i => i.id === ideaId);
+    if (!targetIdea) return;
+
+    if (currentUser && targetIdea.author.id !== currentUser.id) {
+      alert('You can only delete ideas pitched by your current Google account.');
+      return;
+    }
+
+    setRawIdeas(prev => prev.filter(i => i.id !== ideaId));
+
+    if (selectedIdeaId === ideaId) {
+      setSelectedIdeaId(null);
+    }
+
+    if (currentUser) {
+      updateUserProfile({
+        ideasCount: Math.max(0, (currentUser.ideasCount || 1) - 1),
+        reputation: Math.max(0, (currentUser.reputation || 1000) - 50)
+      });
+    }
+
+    // Clean up user vote maps for this idea
+    setUserVotes(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(uId => {
+        updated[uId] = {
+          upvotedIdeaIds: (updated[uId]?.upvotedIdeaIds || []).filter(id => id !== ideaId),
+          interestedIdeaIds: (updated[uId]?.interestedIdeaIds || []).filter(id => id !== ideaId),
+          potentialIdeaIds: (updated[uId]?.potentialIdeaIds || []).filter(id => id !== ideaId)
+        };
+      });
+      return updated;
+    });
+
+    confetti({ particleCount: 35, spread: 45, origin: { y: 0.6 } });
   };
 
   const addFeedbackToIdea = (ideaId: string, feedbackData: Omit<StructuredFeedback, 'id' | 'userId' | 'userName' | 'userAvatar' | 'createdAt'>) => {
-    const activeUser = currentUser || defaultUser;
+    if (!currentUser) {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const activeUser = currentUser;
 
     const feedback: StructuredFeedback = {
       ...feedbackData,
@@ -385,7 +638,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return {
@@ -396,21 +649,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item;
       })
     );
-
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev
-          ? {
-              ...prev,
-              feedbackList: [feedback, ...prev.feedbackList]
-            }
-          : null
-      );
-    }
   };
 
   const addCommentToIdea = (ideaId: string, content: string) => {
-    const activeUser = currentUser || defaultUser;
+    if (!currentUser) {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const activeUser = currentUser;
 
     const newComment: Comment = {
       id: `cm_${Date.now()}`,
@@ -422,7 +670,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       likes: 0
     };
 
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return {
@@ -433,16 +681,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item;
       })
     );
+  };
 
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev ? { ...prev, comments: [...prev.comments, newComment] } : null
-      );
-    }
+  const deleteCommentFromIdea = (ideaId: string, commentId: string) => {
+    if (!currentUser) return;
+    
+    setRawIdeas(prev =>
+      prev.map(item => {
+        if (item.id === ideaId) {
+          return {
+            ...item,
+            comments: item.comments.filter(c => c.id !== commentId)
+          };
+        }
+        return item;
+      })
+    );
   };
 
   const applyToTeam = (ideaId: string, role: string) => {
-    const activeUser = currentUser || defaultUser;
+    if (!currentUser) {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const activeUser = currentUser;
 
     const member: TeamMember = {
       userId: activeUser.id,
@@ -453,7 +717,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       joinedAt: new Date().toISOString().split('T')[0]
     };
 
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           if (item.team.some(m => m.userId === activeUser.id)) return item;
@@ -463,19 +727,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev && !prev.team.some(m => m.userId === activeUser.id)
-          ? { ...prev, team: [...prev.team, member] }
-          : prev
-      );
-    }
-
     confetti({ particleCount: 60, spread: 50, origin: { y: 0.7 } });
   };
 
   const approveTeamMember = (ideaId: string, userId: string) => {
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return {
@@ -487,22 +743,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev
-          ? {
-              ...prev,
-              team: prev.team.map(m => m.userId === userId ? { ...m, status: 'Member' } : m)
-            }
-          : null
-      );
-    }
-
     confetti({ particleCount: 40, spread: 45, origin: { y: 0.5 } });
   };
 
   const updateTaskStatus = (ideaId: string, taskId: string, newStatus: KanbanTask['status']) => {
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return {
@@ -513,17 +758,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item;
       })
     );
-
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev
-          ? {
-              ...prev,
-              tasks: prev.tasks.map(t => (t.id === taskId ? { ...t, status: newStatus } : t))
-            }
-          : null
-      );
-    }
   };
 
   const addKanbanTask = (ideaId: string, title: string, description: string, assignee: string, priority: KanbanTask['priority']) => {
@@ -537,7 +771,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString().split('T')[0]
     };
 
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return { ...item, tasks: [...item.tasks, newTask] };
@@ -545,16 +779,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item;
       })
     );
-
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev ? { ...prev, tasks: [...prev.tasks, newTask] } : null
-      );
-    }
   };
 
   const deleteKanbanTask = (ideaId: string, taskId: string) => {
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return {
@@ -565,22 +793,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item;
       })
     );
-
-    if (selectedIdea && selectedIdea.id === ideaId) {
-      setSelectedIdea(prev =>
-        prev
-          ? {
-              ...prev,
-              tasks: prev.tasks.filter(t => t.id !== taskId)
-            }
-          : null
-      );
-    }
   };
 
   const submitPitchToChallenge = (ideaId: string, challengeId: string) => {
     const chal = challenges.find(c => c.id === challengeId);
-    setIdeas(prev =>
+    setRawIdeas(prev =>
       prev.map(item => {
         if (item.id === ideaId) {
           return {
@@ -604,7 +821,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         accounts,
         currentUser,
         isAuthenticated: Boolean(currentUser),
-        activeView,
+        activeView: effectiveActiveView,
         setActiveView,
         selectedIdea,
         setSelectedIdea,
@@ -622,6 +839,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAuthModalOpen,
         authModalMode,
         setAuthModalMode,
+        loginWithGoogleCredential,
         loginWithGoogle,
         switchAccount,
         logout,
@@ -631,8 +849,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleToggleInterest,
         handleTogglePotential,
         addNewIdea,
+        deleteIdea,
         addFeedbackToIdea,
         addCommentToIdea,
+        deleteCommentFromIdea,
         applyToTeam,
         approveTeamMember,
         updateTaskStatus,
