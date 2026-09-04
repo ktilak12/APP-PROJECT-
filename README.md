@@ -105,8 +105,8 @@ idea-pitch-platform/
 ### Clone the repository
 
 ```bash
-git clone https://github.com/your-username/idea-pitch-platform.git
-cd idea-pitch-platform
+git clone https://github.com/ktilak12/idea_pitching_platform.git
+cd idea_pitching_platform
 ```
 
 ### Frontend
