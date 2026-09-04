@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { Award, MapPin, GraduationCap, Code2, Globe, Sparkles, UserPlus, Edit3, X, Save } from 'lucide-react';
+import { Award, MapPin, GraduationCap, Code2, Globe, Sparkles, UserPlus, Edit3, X, Save, Camera, Upload, CheckCircle2 } from 'lucide-react';
 import { IdeaCard } from './IdeaCard';
+import { compressImageFile } from '../utils/imageUtils';
+
+const GoogleLogoSvg = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" style={{ minWidth: '18px' }}>
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+);
 
 export const UserProfile: React.FC = () => {
   const { currentUser, ideas, setAuthModalOpen, setAuthModalMode, updateUserProfile, setActiveView } = useApp();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [uploadSuccessToast, setUploadSuccessToast] = useState(false);
 
   // Edit form states
   const [editName, setEditName] = useState(currentUser?.name || '');
+  const [editAvatar, setEditAvatar] = useState(currentUser?.avatar || '');
   const [editRole, setEditRole] = useState(currentUser?.role || '');
   const [editBio, setEditBio] = useState(currentUser?.bio || '');
   const [editLocation, setEditLocation] = useState(currentUser?.location || '');
@@ -17,14 +29,30 @@ export const UserProfile: React.FC = () => {
   const [editGithub, setEditGithub] = useState(currentUser?.github || '');
   const [editLinkedin, setEditLinkedin] = useState(currentUser?.linkedin || '');
 
-  const GoogleLogoSvg = () => (
-    <svg width="18" height="18" viewBox="0 0 48 48" style={{ minWidth: '18px' }}>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, updateImmediately: boolean = true) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const compressedBase64 = await compressImageFile(file, 480, 0.88);
+      setEditAvatar(compressedBase64);
+
+      if (updateImmediately) {
+        updateUserProfile({ avatar: compressedBase64 });
+        setUploadSuccessToast(true);
+        setTimeout(() => setUploadSuccessToast(false), 3000);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error processing image';
+      alert(`Could not upload photo: ${msg}`);
+    } finally {
+      // Clear input so selecting the same file again triggers change
+      e.target.value = '';
+    }
+  };
 
   if (!currentUser) {
     return (
@@ -59,6 +87,7 @@ export const UserProfile: React.FC = () => {
     e.preventDefault();
     updateUserProfile({
       name: editName.trim() || currentUser.name,
+      avatar: editAvatar || currentUser.avatar,
       role: editRole.trim() || currentUser.role,
       bio: editBio.trim() || currentUser.bio,
       location: editLocation.trim() || currentUser.location,
@@ -72,6 +101,7 @@ export const UserProfile: React.FC = () => {
 
   const openEditModal = () => {
     setEditName(currentUser.name);
+    setEditAvatar(currentUser.avatar);
     setEditRole(currentUser.role);
     setEditBio(currentUser.bio);
     setEditLocation(currentUser.location);
@@ -96,18 +126,79 @@ export const UserProfile: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <img 
-            src={currentUser.avatar} 
-            alt={currentUser.name} 
-            style={{
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: '3px solid var(--primary)',
-              boxShadow: 'var(--shadow-glow)'
-            }}
-          />
+          {/* Avatar with Camera Upload Trigger */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <img 
+                src={currentUser.avatar} 
+                alt={currentUser.name} 
+                style={{
+                  width: '105px',
+                  height: '105px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '3px solid var(--primary)',
+                  boxShadow: 'var(--shadow-glow)',
+                  display: 'block'
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="hover-lift"
+                title="Upload profile picture from local computer/storage"
+                style={{
+                  position: 'absolute',
+                  bottom: '2px',
+                  right: '2px',
+                  background: 'var(--primary)',
+                  color: '#FFFFFF',
+                  border: '2px solid var(--bg-surface)',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <Camera size={16} />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => handleImageUpload(e, true)}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '0.75rem', padding: '0.25rem 0.65rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <Upload size={12} />
+              <span>Change Photo</span>
+            </button>
+            {uploadSuccessToast && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#10B981',
+                animation: 'fadeIn 0.2s ease',
+                textAlign: 'center'
+              }}>
+                <CheckCircle2 size={13} />
+                <span>Saved to storage!</span>
+              </div>
+            )}
+          </div>
 
           <div style={{ flex: 1, minWidth: '280px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -286,6 +377,91 @@ export const UserProfile: React.FC = () => {
             </div>
 
             <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Profile Photo Picker from Local Storage */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1.25rem',
+                padding: '0.9rem 1rem',
+                background: 'var(--bg-surface-elevated)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <img 
+                    src={editAvatar || currentUser.avatar} 
+                    alt="Preview" 
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '2px solid var(--primary)',
+                      display: 'block'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => modalFileInputRef.current?.click()}
+                    style={{
+                      position: 'absolute',
+                      bottom: '-2px',
+                      right: '-2px',
+                      background: 'var(--primary)',
+                      color: '#FFFFFF',
+                      border: '2px solid var(--bg-surface)',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                    title="Choose from local storage"
+                  >
+                    <Camera size={13} />
+                  </button>
+                </div>
+
+                <div style={{ flex: 1, minWidth: '180px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.2rem' }}>
+                    Profile Picture
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                    Choose an image from your local device/storage
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => modalFileInputRef.current?.click()}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      <Upload size={12} />
+                      <span>Upload from Device</span>
+                    </button>
+                    {editAvatar && editAvatar !== currentUser.avatar && (
+                      <button
+                        type="button"
+                        onClick={() => setEditAvatar(currentUser.avatar)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem', color: 'var(--text-muted)' }}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    ref={modalFileInputRef}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleImageUpload(e, false)}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Display Name</label>
                 <input type="text" className="input-field" value={editName} onChange={e => setEditName(e.target.value)} required />
