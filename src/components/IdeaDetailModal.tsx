@@ -9,21 +9,23 @@ import {
   AlertTriangle, 
   Star, 
   Code2, 
-  ExternalLink,
-  Send,
-  UserPlus,
-  ThumbsUp,
-  UserCheck
+  ExternalLink, 
+  Send, 
+  UserPlus, 
+  UserCheck, 
+  Trash2 
 } from 'lucide-react';
 
 export const IdeaDetailModal: React.FC = () => {
   const { 
     selectedIdea, 
     setSelectedIdea, 
+    deleteIdea,
     handleUpvote, 
     handleToggleInterest, 
     addFeedbackToIdea,
     addCommentToIdea,
+    deleteCommentFromIdea,
     applyToTeam,
     approveTeamMember,
     currentUser,
@@ -168,6 +170,26 @@ export const IdeaDetailModal: React.FC = () => {
                 >
                   <UserPlus size={18} />
                   <span>Join Team</span>
+                </button>
+              )}
+
+              {isFounder && (
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to permanently delete "${selectedIdea.title}"?`)) {
+                      deleteIdea(selectedIdea.id);
+                    }
+                  }}
+                  style={{
+                    color: 'var(--rose)',
+                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                    background: 'rgba(239, 68, 68, 0.08)'
+                  }}
+                  title="Permanently remove your pitch"
+                >
+                  <Trash2 size={16} />
+                  <span>Delete Pitch</span>
                 </button>
               )}
             </div>
@@ -453,6 +475,14 @@ export const IdeaDetailModal: React.FC = () => {
                     <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>Market Potential (1-5)</label>
                     <input type="number" min="1" max="5" value={marketPotential} onChange={e => setMarketPotential(Number(e.target.value))} className="input-field" />
                   </div>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>Social Impact (1-5)</label>
+                    <input type="number" min="1" max="5" value={socialImpact} onChange={e => setSocialImpact(Number(e.target.value))} className="input-field" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>Technical Ease (1-5)</label>
+                    <input type="number" min="1" max="5" value={technicalDifficulty} onChange={e => setTechnicalDifficulty(Number(e.target.value))} className="input-field" />
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: '0.75rem' }}>
@@ -560,9 +590,33 @@ export const IdeaDetailModal: React.FC = () => {
                   <div key={c.id} style={{ display: 'flex', gap: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.85rem' }}>
                     <img src={c.userAvatar} alt={c.userName} style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem', alignItems: 'center' }}>
                         <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{c.userName}</span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-subtle)' }}>{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-subtle)' }}>{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          {currentUser?.id === c.userId && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to delete this comment?')) {
+                                  deleteCommentFromIdea(selectedIdea.id, c.id);
+                                }
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--rose)',
+                                padding: '0.2rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                opacity: 0.7
+                              }}
+                              title="Delete comment"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <p style={{ fontSize: '0.88rem' }}>{c.content}</p>
                     </div>
