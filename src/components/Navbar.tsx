@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
-  Compass, 
   PlusCircle, 
   Users, 
   Trophy, 
@@ -21,8 +20,20 @@ import {
   Check,
   ChevronDown,
   Bell,
-  CheckCheck
+  CheckCheck,
+  Camera,
+  Upload
 } from 'lucide-react';
+import { compressImageFile } from '../utils/imageUtils';
+
+const GoogleLogoSvg = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" style={{ minWidth: '18px' }}>
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+);
 
 export const Navbar: React.FC = () => {
   const { 
@@ -39,7 +50,8 @@ export const Navbar: React.FC = () => {
     notifications,
     markNotificationsRead,
     setAuthModalOpen,
-    setAuthModalMode
+    setAuthModalMode,
+    updateUserProfile
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -48,6 +60,21 @@ export const Navbar: React.FC = () => {
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDropdownAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file, 480, 0.88);
+      updateUserProfile({ avatar: compressed });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error processing image';
+      alert(`Could not update photo: ${msg}`);
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -66,7 +93,7 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navItems = [
-    { id: 'explore', label: 'Explore', icon: Compass },
+    { id: 'explore', label: 'Home', icon: Home },
     { id: 'matchmaker', label: 'AI Matchmaker', icon: Users },
     { id: 'challenges', label: 'Challenges', icon: Trophy },
     { id: 'workspace', label: 'Workspace', icon: Kanban },
@@ -74,20 +101,17 @@ export const Navbar: React.FC = () => {
   ];
 
   const handleNavClick = (viewId: any) => {
+    if (!currentUser && viewId !== 'entry') {
+      setAuthModalMode('choose');
+      setAuthModalOpen(true);
+      setMobileMenuOpen(false);
+      return;
+    }
     setActiveView(viewId);
     setMobileMenuOpen(false);
     setProfileDropdownOpen(false);
     setNotifDropdownOpen(false);
   };
-
-  const GoogleLogoSvg = () => (
-    <svg width="18" height="18" viewBox="0 0 48 48" style={{ minWidth: '18px' }}>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-  );
 
   return (
     <header className="navbar-header">
@@ -132,31 +156,39 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Center: Desktop Navigation Bar (Segmented Group) */}
-        <nav className="desktop-nav-group">
-          <button
-            onClick={() => handleNavClick('entry')}
-            className={`nav-pill-btn ${activeView === 'entry' ? 'active' : ''}`}
-            title="Landing & Entry Page"
-          >
-            <Home size={15} />
-            <span>Home</span>
-          </button>
+        {currentUser ? (
+          <nav className="desktop-nav-group">
+            <button
+              onClick={() => handleNavClick('entry')}
+              className={`nav-pill-btn ${activeView === 'entry' ? 'active' : ''}`}
+              title="Landing Page"
+            >
+              <Sparkles size={15} />
+              <span>Landing</span>
+            </button>
 
-          {navItems.map(item => {
-            const Icon = item.icon;
-            const isActive = activeView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`nav-pill-btn ${isActive ? 'active' : ''}`}
-              >
-                <Icon size={15} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+            {navItems.map(item => {
+              const Icon = item.icon;
+              const isActive = activeView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`nav-pill-btn ${isActive ? 'active' : ''}`}
+                >
+                  <Icon size={15} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              🔒 Sign in to access full platform & dashboard
+            </span>
+          </div>
+        )}
 
         {/* Right: Search, CTA, Notifications, Theme & Profile Dropdown */}
         <div className="navbar-actions-group">
@@ -381,11 +413,42 @@ export const Navbar: React.FC = () => {
                     paddingBottom: '1rem',
                     borderBottom: '1px solid var(--border-color)'
                   }}>
-                    <img 
-                      src={currentUser.avatar} 
-                      alt={currentUser.name} 
-                      style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }} 
-                    />
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <img 
+                        src={currentUser.avatar} 
+                        alt={currentUser.name} 
+                        style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', display: 'block' }} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        title="Upload profile photo from local storage"
+                        style={{
+                          position: 'absolute',
+                          bottom: '-2px',
+                          right: '-2px',
+                          background: 'var(--primary)',
+                          color: '#FFFFFF',
+                          border: '2px solid var(--bg-surface)',
+                          borderRadius: '50%',
+                          width: '18px',
+                          height: '18px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Camera size={10} />
+                      </button>
+                      <input 
+                        type="file" 
+                        ref={avatarInputRef} 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleDropdownAvatarUpload} 
+                      />
+                    </div>
                     <div style={{ overflow: 'hidden' }}>
                       <div style={{ fontWeight: 800, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {currentUser.name}
@@ -487,6 +550,29 @@ export const Navbar: React.FC = () => {
                     >
                       <UserPlus size={15} />
                       <span>Add another Google account</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="dropdown-menu-item"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.65rem',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-main)',
+                        fontWeight: 600,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <Upload size={14} color="var(--primary)" />
+                      <span>Upload photo (local storage)</span>
                     </button>
 
                     <button
@@ -592,34 +678,47 @@ export const Navbar: React.FC = () => {
               onClick={() => handleNavClick('entry')}
               className={`mobile-nav-btn ${activeView === 'entry' ? 'active' : ''}`}
             >
-              <Home size={18} />
-              <span>Home & Entry</span>
+              <Sparkles size={18} />
+              <span>Landing Page</span>
             </button>
 
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = activeView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`mobile-nav-btn ${isActive ? 'active' : ''}`}
-                >
-                  <Icon size={18} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+            {currentUser && (
+              <>
+                {navItems.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeView === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavClick(item.id)}
+                      className={`mobile-nav-btn ${isActive ? 'active' : ''}`}
+                    >
+                      <Icon size={18} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
 
-            {currentUser ? (
-              <button
-                onClick={() => handleNavClick('profile')}
-                className={`mobile-nav-btn ${activeView === 'profile' ? 'active' : ''}`}
-              >
-                <Award size={18} />
-                <span>Profile ({currentUser.name})</span>
-              </button>
-            ) : (
+                <button
+                  onClick={() => handleNavClick('profile')}
+                  className={`mobile-nav-btn ${activeView === 'profile' ? 'active' : ''}`}
+                >
+                  <Award size={18} />
+                  <span>Profile ({currentUser.name})</span>
+                </button>
+
+                <button
+                  onClick={() => handleNavClick('pitch')}
+                  className="btn btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}
+                >
+                  <PlusCircle size={18} />
+                  <span>Pitch New Idea</span>
+                </button>
+              </>
+            )}
+
+            {!currentUser && (
               <button
                 onClick={() => {
                   setAuthModalMode('choose');
@@ -627,28 +726,12 @@ export const Navbar: React.FC = () => {
                   setMobileMenuOpen(false);
                 }}
                 className="btn btn-primary"
-                style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}
+                style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', padding: '0.75rem' }}
               >
                 <GoogleLogoSvg />
                 <span>Sign in with Google</span>
               </button>
             )}
-
-            <button
-              onClick={() => {
-                if (!currentUser) {
-                  setAuthModalMode('choose');
-                  setAuthModalOpen(true);
-                } else {
-                  handleNavClick('pitch');
-                }
-              }}
-              className="btn btn-primary"
-              style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}
-            >
-              <PlusCircle size={18} />
-              <span>Pitch New Idea</span>
-            </button>
           </div>
         </div>
       )}
